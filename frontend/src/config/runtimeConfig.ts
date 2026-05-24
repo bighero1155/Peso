@@ -11,18 +11,25 @@ export const loadRuntimeConfig = async (): Promise<RuntimeConfig> => {
     return runtimeConfig;
   }
 
-  const response = await fetch("/api/config", {
-    cache: "no-store",
-  });
+  try {
+    const response = await fetch("/api/config", {
+      cache: "no-store",
+    });
 
-  if (!response.ok) {
-    throw new Error("Failed to load runtime config");
+    if (!response.ok) {
+      // Fallback config when backend is not available
+      runtimeConfig = { apiBaseUrl: "" };
+      return runtimeConfig;
+    }
+
+    const data: RuntimeConfig = await response.json();
+    runtimeConfig = data;
+    return data;
+  } catch {
+    // Fallback when backend is unreachable
+    runtimeConfig = { apiBaseUrl: "" };
+    return runtimeConfig;
   }
-
-  const data: RuntimeConfig = await response.json();
-  runtimeConfig = data;
-
-  return data;
 };
 
 export const getRuntimeConfig = (): RuntimeConfig => {
